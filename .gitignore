@@ -1,0 +1,9 @@
+# TS
+dist/
+node_modules/
+
+# Config
+config.json
+
+# Cache
+cache/
