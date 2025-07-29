@@ -1,9 +1,10 @@
-import { Client, MessagePayload } from "discord.js";
+import { MessagePayload } from "discord.js";
 import type { APIEmbed, SendableChannels } from "discord.js";
-import { log, logError, logInfo, logStart } from "../logger.js";
+import ClientWrapper from "../wrapper.js";
+import { log, logError, logInfo, logNewLine, logStart } from "../logger.js";
 import { fetchPlaylist, fetchUser } from "./api/endpoints.js";
 import { Cache } from "./cache/cache.js";
-import { createLink, formatPlaylistName, formatTime } from "../utils.js";
+import { createLink, formatTime, wait } from "../utils.js";
 import type { Playlist, Track, User } from "./api/types/";
 
 import config from "../../config.json" with { type: "json" };
@@ -114,7 +115,7 @@ function createNotificationMessage(playlist: Playlist, lastTrack: Track): APIEmb
     };
 }
 
-async function notify(client: Client<true>, playlistId: string, tracks: [Track, number][]) {
+async function notify(client: ClientWrapper<true>, playlistId: string, tracks: [Track, number][]) {
     const playlistConfig = getPlaylistConfig(playlistId);
     if (!playlistConfig) {
         logError(`Playlist configuration not found for ID: ${playlistId}`);
@@ -164,7 +165,7 @@ function isSnapshotUpdated(playlist: Playlist): boolean {
     return !!entry && playlist.snapshot_id !== entry.getSnapshotId();
 }
 
-async function updatePlaylist(client: Client<true>, playlist: Playlist) {
+async function updatePlaylist(client: ClientWrapper<true>, playlist: Playlist) {
     const entry = await cache.update(playlist.id, playlist);
     if (entry) {
         // check diffs
@@ -178,14 +179,36 @@ async function updatePlaylist(client: Client<true>, playlist: Playlist) {
     }
 }
 
-export async function main(client: Client<true>) {
+async function checkForUpdates(client: ClientWrapper<true>) {
+    // client.setBusy(true);
+    logInfo("Starting snapshot check".green);
+    for (const playlistConfig of config.spotify.playlists) {
+        logStart(playlistConfig.playlistID.magenta);
+        const playlist = await fetchPlaylist(playlistConfig.playlistID);
+        log(` (${playlist.name})`.cyan);
+
+        if (isSnapshotUpdated(playlist)) {
+            log(" -> Snapshot changed, updating cache\n".yellow);
+            await updatePlaylist(client, playlist);
+        } else {
+            log(" -> No snapshot change\n");
+        }
+    }
+    logNewLine();
+    // client.setBusy(false);
+
+    await wait(INTERVAL);
+    checkForUpdates(client); // Schedule the next check
+}
+
+export async function main(client: ClientWrapper<true>) {
     // initializing the snapshot map with the current snapshot
     logInfo("Initializing Spotify cache".green);
 
     for (const { channelID, playlistID } of config.spotify.playlists) {
         logStart(playlistID.magenta);
         const playlist = await fetchPlaylist(playlistID);
-        log(` (${playlist.name})`.cyan)
+        log(` (${playlist.name})`.cyan);
 
         if (await cache.load(channelID, playlistID)) {
             // CacheEntry found -> if snapshot changed -> update the cache
@@ -205,21 +228,6 @@ export async function main(client: Client<true>) {
 
     logInfo("Initialized successfully\n".green);
 
-    logInfo("Starting snapshot check".green);
-    setInterval(async () => {
-        // logInfo("Checking for snapshot updates...");
-        for (const playlistConfig of config.spotify.playlists) {
-            logStart(playlistConfig.playlistID.magenta);
-            const playlist = await fetchPlaylist(playlistConfig.playlistID);
-            log(` (${playlist.name})`.cyan);
-
-            if (isSnapshotUpdated(playlist)) {
-                log(" -> Snapshot changed, updating cache\n".yellow);
-                await updatePlaylist(client, playlist);
-            } else {
-                log(" -> No snapshot change\n");
-            }
-        }
-        logInfo();
-    }, INTERVAL);
+    await wait(INTERVAL);
+    checkForUpdates(client); // Start the periodic check for updates
 }

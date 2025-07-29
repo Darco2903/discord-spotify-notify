@@ -24,6 +24,6 @@ export function formatTime(time: number): string {
     return `${h > 0 ? `${h}:` : ""}${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-export function formatPlaylistName(name: string, id: string): string {
-    return `${name.cyan} ${`(${id})`.magenta}`;
+export function wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }

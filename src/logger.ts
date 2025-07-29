@@ -23,3 +23,7 @@ export function logWarning(...args: string[]): void {
 export function logInfo(...args: string[]): void {
     process.stdout.write(`${format(...args)}\n`);
 }
+
+export function logNewLine(): void {
+    process.stdout.write(`\n`);
+}
