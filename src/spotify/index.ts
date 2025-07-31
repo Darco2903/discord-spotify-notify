@@ -173,7 +173,12 @@ async function updatePlaylist(client: ClientWrapper<true>, playlist: Playlist) {
         logInfo(`Found ${diff.length.toString().yellow} new tracks`);
 
         if (diff.length > 0) {
-            await notify(client, playlist.id, diff);
+            try {
+                await notify(client, playlist.id, diff);
+            } catch (error) {
+                logError(`Failed to notify about new tracks: ${error}`);
+                return;
+            }
         }
         await entry.save().catch(logError);
     }
