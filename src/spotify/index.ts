@@ -188,7 +188,7 @@ async function checkForUpdates(client: ClientWrapper<true>) {
     // client.setBusy(true);
     logInfo("Starting snapshot check".green);
     for (const playlistConfig of config.spotify.playlists) {
-        if (!playlistConfig.enabled === false) {
+        if (playlistConfig.enabled === false) {
             continue;
         }
 
@@ -212,7 +212,7 @@ export async function main(client: ClientWrapper<true>) {
     logInfo("Initializing Spotify cache".green);
 
     for (const { channelID, playlistID, enabled } of config.spotify.playlists) {
-        if (!enabled === false) {
+        if (enabled === false) {
             continue;
         }
 
