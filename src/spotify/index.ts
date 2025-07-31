@@ -196,9 +196,6 @@ async function checkForUpdates(client: ClientWrapper<true>) {
     }
     logNewLine();
     // client.setBusy(false);
-
-    await wait(INTERVAL);
-    checkForUpdates(client); // Schedule the next check
 }
 
 export async function main(client: ClientWrapper<true>) {
@@ -228,6 +225,8 @@ export async function main(client: ClientWrapper<true>) {
 
     logInfo("Initialized successfully\n".green);
 
-    await wait(INTERVAL);
-    checkForUpdates(client); // Start the periodic check for updates
+    while (true) {
+        await wait(INTERVAL);
+        await checkForUpdates(client); // Start the periodic check for updates
+    }
 }
