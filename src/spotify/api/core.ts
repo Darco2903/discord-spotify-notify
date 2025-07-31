@@ -1,10 +1,12 @@
+import type { Token } from "./types";
 import config from "../../../config.json" with { type: "json" };
 
 export const API_ORIGIN = "https://api.spotify.com/v1";
 
-let token = "";
+let token: string | null = null;
+let tokenExpiry: number | null = null;
 
-async function fetchToken(): Promise<string> {
+async function fetchToken(): Promise<Token> {
     const response = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
         headers: {
@@ -16,14 +18,16 @@ async function fetchToken(): Promise<string> {
             client_secret: config.spotify.clientSecret,
         }),
     });
-    const data = await response.json();
-    // log("Token fetched:", data);
-    return data.access_token;
+    const data: Token = await response.json();
+    // console.log("Token fetched:", data);
+    return data;
 }
 
-export async function apitFetch(endpoint: string): Promise<any> {
-    if (!token) {
-        token = await fetchToken();
+export async function apiFetch(endpoint: string): Promise<any> {
+    if (!token || !tokenExpiry || Date.now() > tokenExpiry) {
+        const t = await fetchToken();
+        token = t.access_token;
+        tokenExpiry = Date.now() + (t.expires_in - 60 * 1000); // Set expiry to 1 minute before actual expiry
     }
 
     const response = await fetch(API_ORIGIN + endpoint, {
