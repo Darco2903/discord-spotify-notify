@@ -193,12 +193,23 @@ async function checkForUpdates(client: ClientWrapper<true>) {
         }
 
         logStart(playlistConfig.playlistID.magenta);
-        const playlist = await fetchPlaylist(playlistConfig.playlistID);
+        const playlist = await fetchPlaylist(playlistConfig.playlistID).catch((error) => {
+            logNewLine();
+            logError(`Failed to fetch playlist ${playlistConfig.playlistID}: ${error}`);
+            return null;
+        });
+
+        if (!playlist) {
+            continue;
+        }
+
         log(` (${playlist.name})`.cyan);
 
         if (isSnapshotUpdated(playlist)) {
             log(" -> Snapshot changed, updating cache\n".yellow);
-            await updatePlaylist(client, playlist);
+            await updatePlaylist(client, playlist).catch((error) => {
+                logError(`Failed to update playlist ${playlistConfig.playlistID}: ${error}`);
+            });
         } else {
             log(" -> No snapshot change\n");
         }
@@ -217,14 +228,24 @@ export async function main(client: ClientWrapper<true>) {
         }
 
         logStart(playlistID.magenta);
-        const playlist = await fetchPlaylist(playlistID);
+        const playlist = await fetchPlaylist(playlistID).catch((error) => {
+            logNewLine();
+            logError(`Failed to fetch playlist ${playlistID}: ${error}`);
+        });
+
+        if (!playlist) {
+            continue;
+        }
+
         log(` (${playlist.name})`.cyan);
 
         if (await cache.load(channelID, playlistID)) {
             // CacheEntry found -> if snapshot changed -> update the cache
             if (isSnapshotUpdated(playlist)) {
                 log(" -> Snapshot changed, updating cache\n".yellow);
-                await updatePlaylist(client, playlist);
+                await updatePlaylist(client, playlist).catch((error) => {
+                    logError(`Failed to update playlist ${playlistID}: ${error}`);
+                });
             } else {
                 log(" -> No snapshot change\n");
             }

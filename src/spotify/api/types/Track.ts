@@ -19,10 +19,10 @@ export type Track = {
                 spotify: string;
             };
             href: string;
-            id: "2up3OPMp9Tb4dAKM2erWXQ";
+            id: string;
             images: [
                 {
-                    url: "https://i.scdn.co/image/ab67616d00001e02ff9ca10b55ce82ae553c8228";
+                    url: string;
                     height: number;
                     width: number;
                 }

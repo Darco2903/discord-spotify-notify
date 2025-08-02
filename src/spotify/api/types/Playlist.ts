@@ -10,9 +10,9 @@ export type Playlist = {
     id: string;
     images: [
         {
-            url: "https://i.scdn.co/image/ab67616d00001e02ff9ca10b55ce82ae553c8228";
-            height: 300;
-            width: 300;
+            url: string;
+            height: number;
+            width: number;
         }
     ];
     name: string;
@@ -22,19 +22,19 @@ export type Playlist = {
         };
         href: string;
         id: string;
-        type: "user";
+        type: string;
         uri: string;
         display_name: string;
     };
     public: false;
     snapshot_id: string;
     tracks: {
-        href: "https://api.spotify.com/v1/me/shows?offset=0&limit=20";
-        limit: 20;
-        next: "https://api.spotify.com/v1/me/shows?offset=1&limit=1";
-        offset: 0;
-        previous: "https://api.spotify.com/v1/me/shows?offset=1&limit=1";
-        total: 4;
+        href: string;
+        limit: number;
+        next: string;
+        offset: number;
+        previous: string;
+        total: number;
         items: Track[];
     };
     type: string;
