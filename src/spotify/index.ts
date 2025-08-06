@@ -3,7 +3,7 @@ import type { APIEmbed, SendableChannels } from "discord.js";
 import ClientWrapper from "../wrapper.js";
 import { log, logError, logInfo, logNewLine, logStart } from "../logger.js";
 import { fetchPlaylist, fetchUser } from "./api/endpoints.js";
-import { Cache } from "./cache/cache.js";
+import { Cache } from "./entries/cache.js";
 import { createLink, formatTime, wait } from "../utils.js";
 import type { Playlist, Track, User } from "./api/types/";
 
@@ -165,23 +165,22 @@ function isSnapshotUpdated(playlist: Playlist): boolean {
     return !!entry && playlist.snapshot_id !== entry.getSnapshotId();
 }
 
-async function updatePlaylist(client: ClientWrapper<true>, playlist: Playlist) {
+function checkSnapshot(playlist: Playlist): number {
+    const entry = cache.get(playlist.id);
+    return entry?.checkSnapshotIdle(playlist.snapshot_id) ?? -1;
+}
+
+async function updatePlaylist(playlist: Playlist): Promise<[Track, number][]> {
     const entry = await cache.update(playlist.id, playlist);
     if (entry) {
         // check diffs
         const diff = entry.checkDiff();
         logInfo(`Found ${diff.length.toString().yellow} new tracks`);
 
-        if (diff.length > 0) {
-            try {
-                await notify(client, playlist.id, diff);
-            } catch (error) {
-                logError(`Failed to notify about new tracks: ${error}`);
-                return;
-            }
-        }
         await entry.save().catch(logError);
+        return diff;
     }
+    return [];
 }
 
 async function checkForUpdates(client: ClientWrapper<true>) {
@@ -205,13 +204,31 @@ async function checkForUpdates(client: ClientWrapper<true>) {
 
         log(` (${playlist.name})`.cyan);
 
-        if (isSnapshotUpdated(playlist)) {
-            log(" -> Snapshot changed, updating cache\n".yellow);
-            await updatePlaylist(client, playlist).catch((error) => {
-                logError(`Failed to update playlist ${playlistConfig.playlistID}: ${error}`);
-            });
-        } else {
-            log(" -> No snapshot change\n");
+        const check = checkSnapshot(playlist);
+
+        switch (check) {
+            case -1:
+                log(" -> No snapshot change\n");
+                break;
+
+            case 0:
+                log(" -> Snapshot changed, updating cache\n".yellow);
+                const diff = await updatePlaylist(playlist).catch((error) => {
+                    logError(`Failed to update playlist ${playlist.id}: ${error}`);
+                    return [];
+                });
+
+                if (diff.length > 0) {
+                    await notify(client, playlist.id, diff).catch((error) => {
+                        logNewLine();
+                        logError(`Failed to notify about new tracks in playlist: ${error}`);
+                    });
+                }
+                break;
+
+            default:
+                log(` -> Snapshot idling for ${check} more checks\n`.magenta);
+                break;
         }
     }
     logNewLine();
@@ -243,9 +260,16 @@ export async function main(client: ClientWrapper<true>) {
             // CacheEntry found -> if snapshot changed -> update the cache
             if (isSnapshotUpdated(playlist)) {
                 log(" -> Snapshot changed, updating cache\n".yellow);
-                await updatePlaylist(client, playlist).catch((error) => {
+                const diff = await updatePlaylist(playlist).catch((error) => {
                     logError(`Failed to update playlist ${playlistID}: ${error}`);
+                    return [];
                 });
+
+                if (diff.length > 0) {
+                    await notify(client, playlist.id, diff).catch((error) => {
+                        logError(`Failed to notify about new tracks in playlist: ${error}`);
+                    });
+                }
             } else {
                 log(" -> No snapshot change\n");
             }
