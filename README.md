@@ -18,7 +18,7 @@ pnpm build
     },
     "discord": {
         "clientID": "DISCORD_CLIENT_ID",
-        "token": "DISCORD_BOT_TOKEN",
+        "token": "DISCORD_BOT_TOKEN"
     },
     "spotify": {
         "clientID": "SPOTIFY_CLIENT_ID",
@@ -26,18 +26,19 @@ pnpm build
         "playlists": [
             {
                 "name": "playlist1",
-                "enabled": true|false,
+                "enabled": true,
                 "playlistID": "SPOTIFY_PLAYLIST_ID",
                 "channelID": "DISCORD_CHANNEL_ID",
                 "roleID": "DISCORD_ROLE_ID"
-            },
-            ...
+            }
         ],
         "checkInterval": 30,
         "idleTimes": 2
     }
 }
 ```
+
+> **enabled** is an optional boolean that determines whether the bot will check this playlist. (defaults to true)
 
 > **checkInterval** is the time in seconds between each check.
 
