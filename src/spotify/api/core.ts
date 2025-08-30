@@ -1,4 +1,4 @@
-import type { Token } from "./types";
+import type { Token } from "./types/index.js";
 import config from "../../../config.json" with { type: "json" };
 
 export const API_ORIGIN = "https://api.spotify.com/v1";

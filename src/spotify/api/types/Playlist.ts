@@ -1,4 +1,22 @@
-import type { Track } from "./Track.js";
+import type { TrackLight } from "./Track.js";
+
+export type PlaylistLight = {
+    name: string;
+    description: string;
+    external_urls: {
+        spotify: string;
+    };
+    id: string;
+    images: {
+        url: string;
+        height: number;
+        width: number;
+    }[];
+    tracks: {
+        total: number;
+    };
+    snapshot_id: string;
+};
 
 export type Playlist = {
     collaborative: false;
@@ -35,7 +53,7 @@ export type Playlist = {
         offset: number;
         previous: string;
         total: number;
-        items: Track[];
+        items: TrackLight[];
     };
     type: string;
     uri: string;

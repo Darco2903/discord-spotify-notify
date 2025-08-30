@@ -1,16 +1,16 @@
 import fs from "fs";
 import path from "path";
 import { exists } from "../../utils.js";
-import type { Playlist, Track } from "../api/types";
+import type {  PlaylistLight, TrackLight } from "../api/types/index.js";
 
 import config from "../../../config.json" with { type: "json" };
 
 export class CacheEntry {
     protected channelID: string;
-    protected playlist: Playlist;
-    protected lastPlaylist: Playlist;
-    protected tracks: Track[];
-    protected lastTracks: Track[];
+    protected playlist: PlaylistLight;
+    protected lastPlaylist: PlaylistLight;
+    protected tracks: TrackLight[];
+    protected lastTracks: TrackLight[];
     protected lastSnapshotId: string;
     protected snapshotIdle: number;
 
@@ -29,7 +29,7 @@ export class CacheEntry {
         return entry;
     }
 
-    constructor(channelID: string, playlist: Playlist, tracks: Track[]) {
+    constructor(channelID: string, playlist: PlaylistLight, tracks: TrackLight[]) {
         this.channelID = channelID;
         this.playlist = playlist;
         this.lastPlaylist = playlist;
@@ -39,7 +39,7 @@ export class CacheEntry {
         this.snapshotIdle = -1;
     }
 
-    update(playlist: Playlist, tracks: Track[]): void {
+    update(playlist: PlaylistLight, tracks: TrackLight[]): void {
         this.lastPlaylist = this.playlist;
         this.playlist = playlist;
         this.lastTracks = this.tracks;
@@ -52,11 +52,11 @@ export class CacheEntry {
         return this.playlist.id;
     }
 
-    getPlaylist(): Playlist {
+    getPlaylist(): PlaylistLight {
         return this.playlist;
     }
 
-    getTracks(): Track[] {
+    getTracks(): TrackLight[] {
         return this.tracks;
     }
 
@@ -88,8 +88,8 @@ export class CacheEntry {
         await fs.promises.writeFile(filePath, data);
     }
 
-    checkDiff(): [Track, number][] {
-        const diff: [Track, number][] = [];
+    checkDiff(): [TrackLight, number][] {
+        const diff: [TrackLight, number][] = [];
         const lastTrackIds = new Set(this.lastTracks.map((track) => track.track.id));
         for (let i = 0; i < this.tracks.length; i++) {
             const track = this.tracks[i];

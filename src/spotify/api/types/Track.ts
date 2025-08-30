@@ -1,3 +1,35 @@
+export type TrackLight = {
+    added_at: string;
+    added_by: {
+        id: string;
+    };
+    track: {
+        id: string;
+        album: {
+            images: [
+                {
+                    url: string;
+                    height: number;
+                    width: number;
+                }
+            ];
+        };
+        external_urls: {
+            spotify: string;
+        };
+        duration_ms: number;
+        name: string;
+        artists: [
+            {
+                external_urls: {
+                    spotify: string;
+                };
+                name: string;
+            }
+        ];
+    };
+};
+
 export type Track = {
     added_at: string;
     added_by: {
@@ -13,7 +45,7 @@ export type Track = {
     track: {
         album: {
             album_type: "compilation";
-            total_tracks: number
+            total_tracks: number;
             available_markets: ["CA", "BR", "IT"];
             external_urls: {
                 spotify: string;

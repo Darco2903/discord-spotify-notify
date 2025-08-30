@@ -1,11 +1,11 @@
 import { MessagePayload } from "discord.js";
 import type { APIEmbed, SendableChannels } from "discord.js";
 import ClientWrapper from "../wrapper.js";
-import { log, logError, logInfo, logNewLine, logStart } from "../logger.js";
+import { log, logError, logInfo, logNewLine, logStart, logWarning } from "../logger.js";
 import { fetchPlaylist, fetchUser } from "./api/endpoints.js";
 import { Cache } from "./entries/cache.js";
 import { createLink, formatTime, wait } from "../utils.js";
-import type { Playlist, Track, User } from "./api/types/";
+import type { PlaylistLight, TrackLight, User } from "./api/types/index.js";
 
 import config from "../../config.json" with { type: "json" };
 
@@ -16,14 +16,14 @@ function getPlaylistConfig(playlistId: string) {
     return config.spotify.playlists.find((p) => p.playlistID === playlistId) || null;
 }
 
-function createEmbed(track: Track, position: number, user: User): APIEmbed {
+function createEmbed(track: TrackLight, position: number, user: User | null): APIEmbed {
     return {
         title: track.track.name,
         description: track.track.artists.map((artist) => createLink(artist.name, artist.external_urls.spotify)).join(" - "),
         author: {
-            name: user.display_name,
-            icon_url: user.images[0]?.url,
-            url: user.external_urls.spotify,
+            name: user?.display_name || "Unknown",
+            icon_url: user?.images[0]?.url,
+            url: user?.external_urls.spotify,
         },
         fields: [
             {
@@ -55,22 +55,25 @@ function createEmbed(track: Track, position: number, user: User): APIEmbed {
     };
 }
 
-function createTrackMessage(channel: SendableChannels, tracks_chunk: [Track, number][], user: User[]): MessagePayload {
+function createTrackMessage(channel: SendableChannels, tracks_chunk: [TrackLight, number][], user: (User | null)[]): MessagePayload {
     return MessagePayload.create(channel, {
         embeds: tracks_chunk.map(([track, position], i) => createEmbed(track, position, user[i])),
     });
 }
 
-async function getUserWithCache(userId: string, cache: Map<string, User>): Promise<User> {
+async function getUserWithCache(userId: string, cache: Map<string, User>): Promise<User | null> {
     let user = cache.get(userId);
     if (!user) {
         user = await fetchUser(userId);
+        if (!user) {
+            return null;
+        }
         cache.set(userId, user);
     }
     return user;
 }
 
-async function createUserList(track_chunk: [Track, number][], userCache: Map<string, User>): Promise<User[]> {
+async function createUserList(track_chunk: [TrackLight, number][], userCache: Map<string, User>): Promise<(User | null)[]> {
     const users = [];
     for (const [track] of track_chunk) {
         const user = await getUserWithCache(track.added_by.id, userCache);
@@ -79,11 +82,11 @@ async function createUserList(track_chunk: [Track, number][], userCache: Map<str
     return users;
 }
 
-async function notifyTracks(channel: SendableChannels, track_chunk: [Track, number][], userCache: Map<string, User>) {
+async function notifyTracks(channel: SendableChannels, track_chunk: [TrackLight, number][], userCache: Map<string, User>) {
     const users = await createUserList(track_chunk, userCache);
     if (users.some((user) => !user)) {
-        logError("One or more users not found.");
-        return;
+        logWarning("One or more users not found.");
+        // return;
     }
 
     const message = createTrackMessage(channel, track_chunk, users);
@@ -91,7 +94,7 @@ async function notifyTracks(channel: SendableChannels, track_chunk: [Track, numb
     // logInfo(`Notification sent for playlist ${cached.getName()} (${playlistId})`);
 }
 
-function createNotificationMessage(playlist: Playlist, lastTrack: Track): APIEmbed {
+function createNotificationMessage(playlist: PlaylistLight, lastTrack: TrackLight): APIEmbed {
     return {
         title: `**${playlist.name}**`,
         description: playlist.description || "*No description*",
@@ -115,7 +118,7 @@ function createNotificationMessage(playlist: Playlist, lastTrack: Track): APIEmb
     };
 }
 
-async function notify(client: ClientWrapper<true>, playlistId: string, tracks: [Track, number][]) {
+async function notify(client: ClientWrapper<true>, playlistId: string, tracks: [TrackLight, number][]) {
     const playlistConfig = getPlaylistConfig(playlistId);
     if (!playlistConfig) {
         logError(`Playlist configuration not found for ID: ${playlistId}`);
@@ -160,17 +163,17 @@ async function notify(client: ClientWrapper<true>, playlistId: string, tracks: [
     }
 }
 
-function isSnapshotUpdated(playlist: Playlist): boolean {
+function isSnapshotUpdated(playlist: PlaylistLight): boolean {
     const entry = cache.get(playlist.id);
     return !!entry && playlist.snapshot_id !== entry.getSnapshotId();
 }
 
-function checkSnapshot(playlist: Playlist): number {
+function checkSnapshot(playlist: PlaylistLight): number {
     const entry = cache.get(playlist.id);
     return entry?.checkSnapshotIdle(playlist.snapshot_id) ?? -1;
 }
 
-async function updatePlaylist(playlist: Playlist): Promise<[Track, number][]> {
+async function updatePlaylist(playlist: PlaylistLight): Promise<[TrackLight, number][]> {
     const entry = await cache.update(playlist.id, playlist);
     if (entry) {
         // check diffs

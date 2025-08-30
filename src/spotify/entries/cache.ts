@@ -1,5 +1,5 @@
 import { CacheEntry } from "./CacheEntry.js";
-import type { Playlist } from "../api/types/Playlist.js";
+import type { PlaylistLight } from "../api/types/Playlist.js";
 import { fetchPlaylistTracksFull } from "../api/endpoints.js";
 
 export class Cache {
@@ -23,7 +23,7 @@ export class Cache {
         return this.cache.get(playlistID);
     }
 
-    async set(channelID: string, playlistID: string, playlist: Playlist): Promise<CacheEntry> {
+    async set(channelID: string, playlistID: string, playlist: PlaylistLight): Promise<CacheEntry> {
         // console.log(`Setting cache for playlist ${playlistID} in channel ${channelID}`);
         const tracks = await fetchPlaylistTracksFull(playlistID);
         const entry = new CacheEntry(channelID, playlist, tracks);
@@ -32,7 +32,7 @@ export class Cache {
         return entry;
     }
 
-    async update(playlistID: string, playlist: Playlist): Promise<CacheEntry | undefined> {
+    async update(playlistID: string, playlist: PlaylistLight): Promise<CacheEntry | undefined> {
         const tracks = await fetchPlaylistTracksFull(playlistID);
         const entry = this.cache.get(playlistID);
         // console.log("cache found:", !!entry);

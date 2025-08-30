@@ -1,17 +1,14 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
-import { log, logInfo, logNewLine } from "./logger.js";
+import { logInfo, logNewLine } from "./logger.js";
 
 import config from "../config.json" with { type: "json" };
 
 export default class ClientWrapper<T extends boolean> extends Client<T> {
-
     protected busy: boolean;
 
     constructor() {
         super({
-            intents: [
-                GatewayIntentBits.Guilds,
-            ],
+            intents: [GatewayIntentBits.Guilds],
         });
 
         this.busy = false;
@@ -30,11 +27,11 @@ export default class ClientWrapper<T extends boolean> extends Client<T> {
             await new Promise((resolve) => setTimeout(resolve, 1000));
         }
     }
-    
+
     async start(): Promise<ClientWrapper<true>> {
         this.login(config.discord.token);
         return new Promise<ClientWrapper<true>>((resolve) => {
-            this.once(Events.ClientReady, ()=>resolve(this as ClientWrapper<true>));
+            this.once(Events.ClientReady, () => resolve(this as ClientWrapper<true>));
         });
     }
 

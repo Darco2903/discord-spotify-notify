@@ -1,0 +1,1 @@
+-   [x] rework cache (keep only necessary data)
