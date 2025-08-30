@@ -1,4 +1,4 @@
-import { MessagePayload } from "discord.js";
+import { ActivityType, MessagePayload } from "discord.js";
 import type { APIEmbed, SendableChannels } from "discord.js";
 import ClientWrapper from "../wrapper.js";
 import { log, logError, logInfo, logNewLine, logStart, logWarning } from "../logger.js";
@@ -186,9 +186,29 @@ async function updatePlaylist(playlist: PlaylistLight): Promise<[TrackLight, num
     return [];
 }
 
+function idleActivity(client: ClientWrapper<true>) {
+    client.user.setPresence({
+        status: "online",
+        activities: [
+            {
+                name: "Spotify",
+                state: "T'as cru que t'allais voir ce que j'écoute ? 👀",
+                type: ActivityType.Listening,
+            },
+        ],
+    });
+}
+
 async function checkForUpdates(client: ClientWrapper<true>) {
     // client.setBusy(true);
     logInfo("Starting snapshot check".green);
+
+    client.user.setActivity({
+        name: "Spotify",
+        state: "À la recherche de nouvelles pépites",
+        type: ActivityType.Custom,
+    });
+
     for (const playlistConfig of config.spotify.playlists) {
         if (playlistConfig.enabled === false) {
             continue;
@@ -236,11 +256,18 @@ async function checkForUpdates(client: ClientWrapper<true>) {
     }
     logNewLine();
     // client.setBusy(false);
+
+    idleActivity(client);
 }
 
 export async function main(client: ClientWrapper<true>) {
     // initializing the snapshot map with the current snapshot
     logInfo("Initializing Spotify cache".green);
+    client.user.setActivity({
+        name: "Spotify",
+        state: "Initialisation...",
+        type: ActivityType.Custom,
+    });
 
     for (const { channelID, playlistID, enabled } of config.spotify.playlists) {
         if (enabled === false) {
@@ -285,6 +312,8 @@ export async function main(client: ClientWrapper<true>) {
     }
 
     logInfo("Initialized successfully\n".green);
+
+    idleActivity(client);
 
     while (true) {
         await wait(INTERVAL);
