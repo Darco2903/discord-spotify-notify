@@ -17,9 +17,9 @@ export async function fetchPlaylistTracksFull(playlistId: string): Promise<Track
     let url = `/playlists/${playlistId}/tracks?limit=${LIMIT}&locale=*`;
     let list: TrackLight[] = [];
 
-    let i = 0;
+    // let i = 0;
     do {
-        console.log(`[${i++}] Fetching playlist tracks from ${url}`);
+        // console.log(`[${++i}] Fetching playlist tracks from ${url}`);
         res = await apiFetch(url);
         url = res.next?.replace(API_ORIGIN, "");
         list.push(...res.items.map(trackToTrackLight));
