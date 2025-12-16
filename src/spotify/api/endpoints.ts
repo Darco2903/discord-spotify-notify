@@ -9,7 +9,7 @@ export async function fetchPlaylist(playlistId: string): Promise<PlaylistLight> 
 }
 
 export async function fetchPlaylistTracks(playlistId: string, offset: number, limit: number): Promise<PlaylistTracks> {
-    return apiFetch(`/playlists/${playlistId}/tracks?offset=${Math.max(offset, 0)}&limit=${Math.min(limit, LIMIT)}`);
+    return apiFetch(`/playlists/${playlistId}/tracks?offset=${Math.max(offset, 0)}&limit=${Math.min(limit, LIMIT)}&locale=*`);
 }
 
 export async function fetchPlaylistTracksFull(playlistId: string): Promise<TrackLight[]> {
