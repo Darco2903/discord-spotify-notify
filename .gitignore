@@ -1,6 +1,8 @@
 # TS
 dist/
 node_modules/
+*_
+*_.*
 
 # Config
 config.json

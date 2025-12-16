@@ -38,7 +38,7 @@ pnpm build
 }
 ```
 
-> **enabled** is an optional boolean that determines whether the bot will check this playlist. (defaults to true)
+> **playlists[x].enabled** is an optional boolean that determines whether the bot will check this playlist. (defaults to true)
 
 > **checkInterval** is the time in seconds between each check.
 

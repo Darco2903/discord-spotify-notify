@@ -1,2 +1,2 @@
 -   [x] rework cache (keep only necessary data)
--   [ ] fetch tracks with progress
+-   [x] fetch tracks with progress
