@@ -1,12 +1,14 @@
 {
     "name": "discord-spotify-notify",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "",
     "main": "dist/index.js",
     "keywords": [],
-    "author": "",
+    "author": "Darco2903",
     "license": "ISC",
+    "private": true,
     "type": "module",
+    "packageManager": "pnpm@10.25.0",
     "scripts": {
         "build": "tsc",
         "start": "node dist/index.js",
@@ -15,11 +17,11 @@
     },
     "dependencies": {
         "colors": "^1.4.0",
-        "discord.js": "^14.21.0"
+        "discord.js": "^14.25.1"
     },
     "devDependencies": {
-        "rimraf": "^6.0.1",
-        "tsx": "^4.20.3",
-        "typescript": "^5.9.2"
+        "rimraf": "^6.1.2",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
     }
 }

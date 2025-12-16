@@ -174,7 +174,7 @@ function checkSnapshot(playlist: PlaylistLight): number {
 }
 
 async function updatePlaylist(playlist: PlaylistLight): Promise<[TrackLight, number][]> {
-    const entry = await cache.update(playlist.id, playlist);
+    const entry = await cache.update(playlist);
     if (entry) {
         // check diffs
         const diff = entry.checkDiff();
@@ -306,7 +306,7 @@ export async function main(client: ClientWrapper<true>) {
         } else {
             // CacheEntry not found
             log(" -> No cache entry found, creating new entry\n".yellow);
-            const entry = await cache.set(channelID, playlistID, playlist);
+            const entry = await cache.set(channelID, playlist);
             await entry.save().catch(logError);
         }
     }

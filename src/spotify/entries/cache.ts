@@ -1,7 +1,8 @@
 import { CacheEntry } from "./CacheEntry.js";
-import type { PlaylistLight, TrackLight } from "../api/types/index.js";
-import { fetchPlaylistTracks, fetchPlaylistTracksFull } from "../api/endpoints.js";
-import { trackToTrackLight } from "../api/utils.js";
+import type { PlaylistLight } from "../api/types/index.js";
+import { fetchPlaylistTracksFull } from "../api/endpoints.js";
+import { logNewLine, logStart } from "../../logger.js";
+import { wait } from "../../utils.js";
 
 export class Cache {
     protected cache: Map<string, CacheEntry>;
@@ -24,18 +25,35 @@ export class Cache {
         return this.cache.get(playlistID);
     }
 
-    async set(channelID: string, playlistID: string, playlist: PlaylistLight): Promise<CacheEntry> {
-        // console.log(`Setting cache for playlist ${playlistID} in channel ${channelID}`);
-        const tracks = await fetchPlaylistTracksFull(playlistID);
+    async set(channelID: string, playlist: PlaylistLight): Promise<CacheEntry> {
+        logStart(`Fetching tracks:`.cyan);
+        const tracks = await fetchPlaylistTracksFull(playlist, (progress) => {
+            process.stdout.cursorTo(22); // Move cursor after "[dd/mm/yyyy hh:mm:ss] "
+            process.stdout.write(
+                `${"Fetching tracks:".cyan} ${progress.current.toString().padStart(progress.total.toString().length, "0").green}/${
+                    progress.total.toString().yellow
+                }`
+            );
+        }).finally(logNewLine);
+
         const entry = new CacheEntry(channelID, playlist, tracks);
-        this.cache.set(playlistID, entry);
+        this.cache.set(playlist.id, entry);
         // console.log("number of entries in cache:", this.cache.size);
         return entry;
     }
 
-    async update(playlistID: string, playlist: PlaylistLight): Promise<CacheEntry | undefined> {
-        const tracks = await fetchPlaylistTracksFull(playlistID);
-        const entry = this.cache.get(playlistID);
+    async update(playlist: PlaylistLight): Promise<CacheEntry | undefined> {
+        logStart(`Fetching tracks:`.cyan);
+        const tracks = await fetchPlaylistTracksFull(playlist, (progress) => {
+            process.stdout.cursorTo(22); // Move cursor after "[dd/mm/yyyy hh:mm:ss] "
+            process.stdout.write(
+                `${"Fetching tracks:".cyan} ${progress.current.toString().padStart(progress.total.toString().length, "0").green}/${
+                    progress.total.toString().yellow
+                }`
+            );
+        }).finally(logNewLine);
+
+        const entry = this.cache.get(playlist.id);
         // console.log("cache found:", !!entry);
         entry?.update(playlist, tracks);
         return entry;
