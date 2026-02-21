@@ -1,4 +1,4 @@
-# discord-spotify-notify
+# Discord Spotify Notify
 
 Simple Discord Bot which send notification when tracks are added to a playlist
 
